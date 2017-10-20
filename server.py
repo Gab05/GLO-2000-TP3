@@ -1,5 +1,6 @@
 import socket, optparse, sys
 from socketUtil import recv_msg, send_msg
+from cryptoModule import entierAleatoire, trouverNombrePremier, exponentiationModulaire
 #choisissez l’adresse avec l’option -a et le port avec -p
 parser = optparse.OptionParser()
 parser.add_option("-s", "--server", action="store_true", dest="serveur", default=False)
@@ -24,7 +25,28 @@ else:
             nom = recv_msg(s)
             print("Le nom du client est " + nom)
             send_msg(s, "Enchante, " + nom)
+
+            print("----------")
+            m = trouverNombrePremier()
+            n = trouverNombrePremier()
+            print("Modulo: " + m)
+            print("Base: " + n)
+            print("----------")
+
+            serSecretKey = trouverNombrePremier()
+            serPublicKey = pow(n, serSecretKey) % m
+            print("Server Secret Key: " + serSecretKey)
+            print("Server Public Key: " + serPublicKey)
+            print("----------")
+
+            send_msg(s, "Voici le modulo: " + m)
+            send_msg(s, "Voici la base: " + n)
+            send_msg(s, "Voici la clé publique serveur: " + serPublicKey)
+
+            
+
             s.close()
+
     else: #mode client
         destination = (opts.address, opts.port)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
