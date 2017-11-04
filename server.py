@@ -31,38 +31,49 @@ else:
         while True:
             (s, address) = serversocket.accept()
             i += 1
-            print (str(i) + "e connexion au serveur")
-            send_msg(s, "Bonjour, mon nom est Serveur. Et vous?\n")
-            nom = recv_msg(s)
-            print("Le nom du client est " + nom)
-            send_msg(s, "Enchante, " + nom)
+            print(str(i) + "e connexion au serveur")
 
             print("----------")
             m = trouverNombrePremier()
-            n = trouverNombrePremier()
-            print("Modulo: " + m)
-            print("Base: " + n)
+            n = entierAleatoire(m)
+            print("Envoi du modulo: " + str(m))
+            print("Envoi de la base: " + str(n))
             print("----------")
+            send_msg(s, str(m))
+            send_msg(s, str(n))
 
-            serSecretKey = trouverNombrePremier()
-            serPublicKey = pow(n, serSecretKey) % m
-            print("Server Secret Key: " + serSecretKey)
-            print("Server Public Key: " + serPublicKey)
+            serSecretKey = entierAleatoire(m)
+            serPublicKey = exponentiationModulaire(n, serSecretKey, m)
+            print("Cle privée: " + str(serSecretKey))
+            print("Cle publique a envoyer: " + str(serPublicKey))
+            send_msg(s, str(serPublicKey))
+            pubKeyCli = int(recv_msg(s))
+            print("Cle publique recu: " + str(pubKeyCli))
+            servSharedKey = exponentiationModulaire(pubKeyCli, serSecretKey, m)
+            print("Cle partagee: " + str(servSharedKey))
             print("----------")
-
-            send_msg(s, "Voici le modulo: " + m)
-            send_msg(s, "Voici la base: " + n)
-            send_msg(s, "Voici la clé publique serveur: " + serPublicKey)
-
-            
-
             s.close()
 
     else: #mode client
-        destination = (opts.address, opts.port)
+        destination = (opts.dest, opts.port)
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(destination)
-        print(recv_msg(s))
-        send_msg(s, input())
-        print(recv_msg(s))
+
+        mod = int(recv_msg(s)) #Reception mod
+        base = int(recv_msg(s)) #Reception base
+        print("Reception du modulo: " + str(mod))
+        print("Reception de la base: " + str(base))
+        print("----------")
+        cliSecretKey = entierAleatoire(mod)
+        cliPublicKey = exponentiationModulaire(base, cliSecretKey, mod)
+        print("Cle privee: " + str(cliSecretKey))
+        print("Cle publique a envoyer: " + str(cliPublicKey))
+        pubKeyServ = int(recv_msg(s))
+        print("Cle publique recu: " + str(pubKeyServ))
+        send_msg(s, str(cliPublicKey))
+        cliSharedKey = exponentiationModulaire(pubKeyServ, cliSecretKey, mod)
+        print("Cle partagee: " + str(cliSharedKey))
+        print("----------")
+
         s.close()
+
